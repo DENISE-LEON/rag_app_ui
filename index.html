@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cozy AI Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Welcome View -->
+    <div id="welcome-view" class="view-container active">
+        <div class="welcome-header">
+            <h1>Welcome to your AI Workspace</h1>
+            <p>This assistant is powered by Retrieval-Augmented Generation (RAG). It will only answer questions, analyze data, and generate stats strictly based on the files you upload.</p>
+        </div>
+        
+        <div class="cards-container">
+            <div class="card" onclick="selectIntent('data')">
+                <div class="card-icon">📊</div>
+                <h3>Analyze Data</h3>
+                <p>Upload CSVs or Excel files to extract stats and analysis derived exclusively from your datasets.</p>
+            </div>
+            <div class="card" onclick="selectIntent('rag')">
+                <div class="card-icon">📄</div>
+                <h3>Query Documents</h3>
+                <p>Upload text documents and PDFs to ask questions grounded entirely in your provided sources.</p>
+            </div>
+            <div class="card" onclick="selectIntent('unsure')">
+                <div class="card-icon">🤔</div>
+                <h3>I'm Unsure</h3>
+                <p>Upload your files and let the AI automatically determine the best way to process your sources.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat View -->
+    <div id="chat-view" class="view-container">
+        <div class="chat-header">
+            <h2>AI Assistant</h2>
+            <!-- Replaced the badge with a dropdown -->
+            <select id="mode-selector" class="mode-dropdown" onchange="manualModeSwitch()">
+                <option value="rag">Mode: RAG</option>
+                <option value="analysis">Mode: ANALYSIS</option>
+                <option value="quickstats">Mode: QUICKSTATS</option>
+            </select>
+        </div>
+        
+        <div id="chat-history" class="chat-history">
+            <div class="message ai-message">
+                <div class="message-content">Hello! Please attach your source files using the paperclip icon. I can only answer questions based on the documents you provide.</div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <div id="file-preview-container" class="file-preview-container hidden"></div>
+            <form id="chat-form" onsubmit="handleSend(event)">
+                <label for="file-upload" class="file-upload-btn">
+                    📎
+                </label>
+                <input type="file" id="file-upload" multiple onchange="updateFilePreview()" hidden>
+                
+                <input type="text" id="query-input" placeholder="Ask a question about your uploaded files..." required autocomplete="off">
+                <button type="submit" class="send-btn">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mode Switch Modal -->
+    <div id="switch-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Mode Switch Suggested</h3>
+            <p id="switch-reason-text">The AI suggests switching modes based on your files.</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="confirmSwitch(false)">No, keep current mode</button>
+                <button class="btn-primary" onclick="confirmSwitch(true)">Yes, switch mode</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
