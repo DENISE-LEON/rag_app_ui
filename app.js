@@ -3,7 +3,18 @@ const API_BASE_URL = 'http://localhost:8000';
 
 let currentMode = "";
 let pendingQuery = "";
+const sessionId = getOrCreateSessionId();
 
+function getOrCreateSessionId() {
+    let id = sessionStorage.getItem("session_id");
+
+    if (!id) {
+        id = crypto.randomUUID();
+        sessionStorage.setItem("session_id", id);
+    }
+
+    return id;
+}
 // 1. Handle Welcome Screen Selection
 async function selectIntent(intent) {
     try {
@@ -76,6 +87,7 @@ async function handleSend(event, wantToSwitch = false) {
     
     formData.append("query_request", JSON.stringify(queryRequestData));
     formData.append("want_to_switch", wantToSwitch);
+    formData.append("session_id", sessionId);
     
     Array.from(fileInput.files).forEach(file => {
         formData.append("files", file);
