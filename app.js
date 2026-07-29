@@ -64,77 +64,105 @@ function updateFilePreview() {
 }
 
 // 4. Send Message to Backend
-async function handleSend(event, wantToSwitch = false, modeConfirmed = false) {
+async function handleSend(
+    event,
+    wantToSwitch = false,
+    modeConfirmed = false
+) {
     if (event) event.preventDefault();
-    
+
     const queryInput = document.getElementById('query-input');
     const fileInput = document.getElementById('file-upload');
 
     const text = modeConfirmed
-    ? pendingQuery
-    : queryInput.value.trim();
-    const text = wantToSwitch ? pendingQuery : queryInput.value.trim();
+        ? pendingQuery
+        : queryInput.value.trim();
+
     if (!text && fileInput.files.length === 0) return;
 
-    if (!wantToSwitch) {
+    // Only show the user's message on the original submission.
+    if (!modeConfirmed) {
         appendMessage('user', text);
-        queryInput.value = ''; 
-        pendingQuery = text; 
+        queryInput.value = '';
+        pendingQuery = text;
     }
 
     const formData = new FormData();
+
     const queryRequestData = {
         query: text,
         mode: currentMode
     };
-    
-    formData.append("query_request", JSON.stringify(queryRequestData));
+
+    formData.append(
+        "query_request",
+        JSON.stringify(queryRequestData)
+    );
+
     formData.append("want_to_switch", wantToSwitch);
     formData.append("mode_confirmed", modeConfirmed);
     formData.append("session_id", sessionId);
-    
+
     Array.from(fileInput.files).forEach(file => {
         formData.append("files", file);
     });
 
     try {
-        const response = await fetch(`${API_BASE_URL}/rag/ask_query`, {
-            method: 'POST',
-            body: formData
-        });
-        
+        const response = await fetch(
+            `${API_BASE_URL}/rag/ask_query`,
+            {
+                method: 'POST',
+                body: formData
+            }
+        );
+
         const data = await response.json();
 
-        // Handle Mode Switch Suggestion
         if (data.awaiting_confirmation) {
-            showSwitchModal(data.suggested_mode, data.reason);
-            return; 
+            showSwitchModal(
+                data.suggested_mode,
+                data.reason
+            );
+            return;
         }
 
-        // Handle Normal Success Response
         if (data.message === "No files found") {
-            appendMessage('ai', "I didn't receive any files. Please attach them using the paperclip icon.");
-        } else {
-            // If the backend forced a mode change, update our variable and the dropdown UI
-            if (data.message.includes("mode selected")) {
-                 currentMode = data.message.split(' ')[0].toLowerCase();
-                 document.getElementById('mode-selector').value = currentMode;
-            }
-            
-            let reply = data.response;
-            if (data.sources && data.sources.length > 0) {
-                reply += `\n\n*(Sources: ${data.sources.join(', ')})*`;
-            }
-            appendMessage('ai', reply);
-            
-            // Clear files after successful query
-            // fileInput.value = '';
-            // updateFilePreview();
+            appendMessage(
+                'ai',
+                "I didn't receive any files. Please attach them using the paperclip icon."
+            );
+            return;
         }
+
+        if (
+            data.message &&
+            data.message.includes("mode selected")
+        ) {
+            currentMode = data.message
+                .split(' ')[0]
+                .toLowerCase();
+
+            document.getElementById(
+                'mode-selector'
+            ).value = currentMode;
+        }
+
+        let reply = data.response;
+
+        if (data.sources && data.sources.length > 0) {
+            reply += `\n\n*(Sources: ${data.sources.join(', ')})*`;
+        }
+
+        appendMessage('ai', reply);
+        pendingQuery = "";
 
     } catch (error) {
         console.error("Error querying backend:", error);
-        appendMessage('ai', "Sorry, there was an error processing your request.");
+
+        appendMessage(
+            'ai',
+            "Sorry, there was an error processing your request."
+        );
     }
 }
 
