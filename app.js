@@ -64,12 +64,15 @@ function updateFilePreview() {
 }
 
 // 4. Send Message to Backend
-async function handleSend(event, wantToSwitch = false) {
+async function handleSend(event, wantToSwitch = false, modeConfirmed = false) {
     if (event) event.preventDefault();
     
     const queryInput = document.getElementById('query-input');
     const fileInput = document.getElementById('file-upload');
-    
+
+    const text = modeConfirmed
+    ? pendingQuery
+    : queryInput.value.trim();
     const text = wantToSwitch ? pendingQuery : queryInput.value.trim();
     if (!text && fileInput.files.length === 0) return;
 
@@ -87,6 +90,7 @@ async function handleSend(event, wantToSwitch = false) {
     
     formData.append("query_request", JSON.stringify(queryRequestData));
     formData.append("want_to_switch", wantToSwitch);
+    formData.append("mode_confirmed", modeConfirmed);
     formData.append("session_id", sessionId);
     
     Array.from(fileInput.files).forEach(file => {
@@ -158,6 +162,9 @@ function showSwitchModal(suggestedMode, reason) {
 }
 
 function confirmSwitch(willSwitch) {
-    document.getElementById('switch-modal').classList.add('hidden');
-    handleSend(null, willSwitch);
+    document
+        .getElementById('switch-modal')
+        .classList.add('hidden');
+
+    handleSend(null, willSwitch, true);
 }
